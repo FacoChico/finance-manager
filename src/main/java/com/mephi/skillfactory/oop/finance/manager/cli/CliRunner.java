@@ -31,7 +31,7 @@ public class CliRunner implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        System.out.println("Finance CLI started.\nВведите 'help' для просмотра доступных команд.");
+        System.out.println("Finance Manager CLI started.\nВведите 'help' для просмотра доступных команд.");
         final var scanner = new Scanner(System.in);
         User currentUser = null;
 
@@ -271,9 +271,9 @@ public class CliRunner implements CommandLineRunner {
                   set-budget <category> <amount>                       - установить бюджет для категории
                   transfer <toLogin> <amount> [category] [description] - перевод
                   summary                                              - сводная статистика по кошельку
-                  summary-by-categories <category1, ...>               - сводная статистика по категории/категориям
+                  summary-by-categories <category1 ... categoryN>      - сводная статистика по категории/категориям
                   export                                               - сохранить кошелек в файл 'data/<login>.json'
-                  import                                               - импорт кошелька из json-файла в 'data/<login>.json' (кошелек будет присвоен текущему пользователю)
+                  import <path/to/wallet-file.json>                    - импорт кошелька из json-файла в 'data/<login>.json' (кошелек будет присвоен текущему пользователю)
                   exit                                                 - выход
                 """);
     }
