@@ -17,7 +17,7 @@ public class FileBasedCredentialsRepository implements CredentialsRepository {
     private final File credentialsFile;
 
     public FileBasedCredentialsRepository() {
-        File dataDir = new File("data");
+        final var dataDir = new File("data");
         if (!dataDir.exists()) {
             final var ignored = dataDir.mkdirs();
         }
