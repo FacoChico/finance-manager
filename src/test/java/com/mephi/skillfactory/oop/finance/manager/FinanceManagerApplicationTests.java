@@ -1,4 +1,4 @@
-package com.mephi.skillfactory.oop.finance_manager;
+package com.mephi.skillfactory.oop.finance.manager;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

@@ -1,4 +1,4 @@
-package com.mephi.skillfactory.oop.finance_manager;
+package com.mephi.skillfactory.oop.finance.manager;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
