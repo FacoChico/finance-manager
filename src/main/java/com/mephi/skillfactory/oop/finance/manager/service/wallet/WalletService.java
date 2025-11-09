@@ -4,7 +4,7 @@ import com.mephi.skillfactory.oop.finance.manager.domain.Budget;
 import com.mephi.skillfactory.oop.finance.manager.domain.Operation;
 import com.mephi.skillfactory.oop.finance.manager.domain.User;
 import com.mephi.skillfactory.oop.finance.manager.domain.enumeration.OperationType;
-import com.mephi.skillfactory.oop.finance.manager.repository.PersistenceService;
+import com.mephi.skillfactory.oop.finance.manager.repository.FileBasedWalletRepository;
 import com.mephi.skillfactory.oop.finance.manager.repository.exception.FileContentTypeMismatchException;
 import com.mephi.skillfactory.oop.finance.manager.service.AlertService;
 import com.mephi.skillfactory.oop.finance.manager.service.auth.AuthService;
@@ -32,7 +32,7 @@ import static org.apache.logging.log4j.util.Strings.isBlank;
 @RequiredArgsConstructor
 public class WalletService {
     private final AuthService authService;
-    private final PersistenceService persistenceService;
+    private final FileBasedWalletRepository walletRepository;
     private final AlertService alertService;
 
     public void addIncome(User user, double amount, String category, String description) throws AmountException {
@@ -123,7 +123,7 @@ public class WalletService {
     }
 
     public void saveUserWallet(User user) {
-        persistenceService.saveWallet(user);
+        walletRepository.saveWallet(user);
     }
 
     public void importWalletForUser(String source, User user) throws WalletImportSourceException, FileContentTypeMismatchException {
@@ -142,7 +142,7 @@ public class WalletService {
             throw new WalletImportSourceException("Файл не найден или не является обычным файлом: " + src);
         }
 
-        persistenceService.importWallet(src, user);
+        walletRepository.importWallet(src, user);
     }
 
     private void validateUser(User user, String errorMessage) throws UserNotFoundException {

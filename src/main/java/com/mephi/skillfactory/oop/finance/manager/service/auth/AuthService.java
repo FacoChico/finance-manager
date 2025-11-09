@@ -1,7 +1,8 @@
 package com.mephi.skillfactory.oop.finance.manager.service.auth;
 
 import com.mephi.skillfactory.oop.finance.manager.domain.User;
-import com.mephi.skillfactory.oop.finance.manager.repository.PersistenceService;
+import com.mephi.skillfactory.oop.finance.manager.repository.FileBasedCredentialsRepository;
+import com.mephi.skillfactory.oop.finance.manager.repository.FileBasedWalletRepository;
 import com.mephi.skillfactory.oop.finance.manager.service.auth.exception.IllegalCredentialsException;
 import com.mephi.skillfactory.oop.finance.manager.service.exception.UserNotFoundException;
 
@@ -17,20 +18,22 @@ import static org.apache.logging.log4j.util.Strings.isBlank;
 public class AuthService {
     private final Map<String, User> users;
     private final Map<String, String> credentials;
-    private final PersistenceService persistenceService;
+    private final FileBasedCredentialsRepository credentialsRepository;
+    private final FileBasedWalletRepository walletRepository;
 
-    public AuthService(PersistenceService persistenceService) {
-        this.persistenceService = persistenceService;
+    public AuthService(FileBasedWalletRepository walletRepository, FileBasedCredentialsRepository credentialsRepository) {
+        this.walletRepository = walletRepository;
+        this.credentialsRepository = credentialsRepository;
         this.users = new ConcurrentHashMap<>();
         this.credentials = new ConcurrentHashMap<>();
 
-        final var loadedCredentials = persistenceService.loadCredentials();
+        final var loadedCredentials = credentialsRepository.loadCredentials();
         if (loadedCredentials != null) {
             credentials.putAll(loadedCredentials);
 
             loadedCredentials.forEach((login, passwordHash) -> {
                 final var user = new User(login, passwordHash);
-                final var wallet = persistenceService.loadWallet(login);
+                final var wallet = walletRepository.loadWallet(login);
                 user.setWallet(wallet);
 
                 users.put(login, user);
@@ -48,14 +51,11 @@ public class AuthService {
 
         final var hash = DigestUtils.sha256Hex(password);
         credentials.put(login, hash);
-        // сохраняем credentials на диск
-        persistenceService.saveCredentials(credentials);
+        credentialsRepository.saveCredentials(credentials);
 
-        // создаём User в памяти и сохраняем пустой кошелёк (чтобы файл
-        // data/<login>.json появился)
         final var user = new User(login, hash);
         users.put(login, user);
-        persistenceService.saveWallet(user);
+        walletRepository.saveWallet(user);
     }
 
     public User login(String login, String password) throws IllegalCredentialsException, UserNotFoundException {
@@ -65,27 +65,22 @@ public class AuthService {
 
         final var storedHash = credentials.get(login);
         if (storedHash == null) {
-            // нет учётной записи — просим зарегистрироваться
             throw new UserNotFoundException("Пользователь с логином %s не найден".formatted(login));
         }
 
         final var hash = DigestUtils.sha256Hex(password);
         if (!storedHash.equals(hash)) {
-            // неверный пароль
             throw new IllegalCredentialsException("Неправильный пароль");
         }
 
-        // проверка пройдена — создаём или достаём объект User из памяти и подгружаем
-        // кошелёк
         final User user;
         if (!users.containsKey(login)) {
             user = new User(login, storedHash);
-            user.setWallet(persistenceService.loadWallet(login));
+            user.setWallet(walletRepository.loadWallet(login));
             users.put(login, user);
         } else {
             user = users.get(login);
-            // Обновим кошелёк с диска (чтобы учесть изменения, если они были)
-            user.setWallet(persistenceService.loadWallet(login));
+            user.setWallet(walletRepository.loadWallet(login));
         }
         return user;
     }
