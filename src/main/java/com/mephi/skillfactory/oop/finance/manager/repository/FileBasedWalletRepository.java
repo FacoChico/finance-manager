@@ -6,6 +6,7 @@ import com.mephi.skillfactory.oop.finance.manager.domain.User;
 import com.mephi.skillfactory.oop.finance.manager.domain.Wallet;
 import com.mephi.skillfactory.oop.finance.manager.repository.exception.FileContentTypeMismatchException;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 
 import java.io.File;
@@ -15,9 +16,10 @@ import java.nio.file.Path;
 @Repository
 public class FileBasedWalletRepository implements WalletRepository {
     private final ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
-    private final File dataDir = new File("data");
+    private final File dataDir;
 
-    public FileBasedWalletRepository() {
+    public FileBasedWalletRepository(@Value("${app.data-dir}") String dataDirName) {
+        dataDir = new File(dataDirName);
         if (!dataDir.exists()) {
             final var ignored = dataDir.mkdirs();
         }

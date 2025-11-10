@@ -406,11 +406,9 @@ public class CliRunner implements CommandLineRunner {
     }
 
     private void printSummary(User user) {
-        final var incomes = walletService.totalIncome(user);
-        final var expenses = walletService.totalExpense(user);
-        // TODO: есть поле balance, и это должно работать не так, переработать
-        System.out.printf("В общем на счету: %.2f%n", incomes - expenses);
+        System.out.printf("В общем на счету: %.2f%n", user.getWallet().getBalance());
 
+        final var incomes = walletService.totalIncome(user);
         System.out.printf("%nДоходы за все время: %.2f%n", incomes);
         final var incomeByCategoryMap = walletService.sumByOperationTypeAndCategory(user.getWallet().getOperations(), INCOME, null);
         if (!incomeByCategoryMap.isEmpty()) {
@@ -418,6 +416,7 @@ public class CliRunner implements CommandLineRunner {
             incomeByCategoryMap.forEach((k, v) -> System.out.printf("  %s: %.2f%n", k, v));
         }
 
+        final var expenses = walletService.totalExpense(user);
         System.out.printf("%nРасходы за все время: %.2f%n", expenses);
         final var expenseByCategoryMap = walletService.sumByOperationTypeAndCategory(user.getWallet().getOperations(), EXPENSE, null);
         if (!expenseByCategoryMap.isEmpty()) {

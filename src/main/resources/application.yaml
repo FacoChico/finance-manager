@@ -2,4 +2,7 @@ spring:
   application:
     name: Finance Manager
 
-limit-threshold: 0.2
+app:
+  data-dir: "data"
+  credentials-file: "credentials.json"
+  limit-threshold: 0.2

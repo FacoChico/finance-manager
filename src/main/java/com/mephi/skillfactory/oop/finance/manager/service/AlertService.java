@@ -11,7 +11,7 @@ import static java.lang.Math.abs;
 
 @Service
 public class AlertService {
-    @Value("${limit-threshold}")
+    @Value("${app.limit-threshold}")
     private double limitThreshold;
 
     public void checkAlerts(User user, Operation recentOp, double spentByCategory, double totalIncome, double totalExpense) {
@@ -33,7 +33,7 @@ public class AlertService {
 
         if (totalExpense > totalIncome) {
             final var diff = abs(totalExpense - totalIncome);
-            System.out.printf("Общие расходы (%.2f) превышают доходы!(%.2f)%nВы в минусе на (%.2f)!%n", totalExpense, totalIncome, diff);
+            System.out.printf("Общие расходы (%.2f) превышают доходы(%.2f)!%nВы в минусе на %.2f!%n", totalExpense, totalIncome, diff);
         }
     }
 }

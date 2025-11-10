@@ -1,8 +1,8 @@
 package com.mephi.skillfactory.oop.finance.manager.service.auth;
 
 import com.mephi.skillfactory.oop.finance.manager.domain.User;
-import com.mephi.skillfactory.oop.finance.manager.repository.FileBasedCredentialsRepository;
-import com.mephi.skillfactory.oop.finance.manager.repository.FileBasedWalletRepository;
+import com.mephi.skillfactory.oop.finance.manager.repository.CredentialsRepository;
+import com.mephi.skillfactory.oop.finance.manager.repository.WalletRepository;
 import com.mephi.skillfactory.oop.finance.manager.service.auth.exception.IllegalCredentialsException;
 import com.mephi.skillfactory.oop.finance.manager.service.exception.UserNotFoundException;
 
@@ -18,10 +18,10 @@ import static org.apache.logging.log4j.util.Strings.isBlank;
 public class AuthService {
     private final Map<String, User> users;
     private final Map<String, String> credentials;
-    private final FileBasedCredentialsRepository credentialsRepository;
-    private final FileBasedWalletRepository walletRepository;
+    private final CredentialsRepository credentialsRepository;
+    private final WalletRepository walletRepository;
 
-    public AuthService(FileBasedWalletRepository walletRepository, FileBasedCredentialsRepository credentialsRepository) {
+    public AuthService(WalletRepository walletRepository, CredentialsRepository credentialsRepository) {
         this.walletRepository = walletRepository;
         this.credentialsRepository = credentialsRepository;
         this.users = new ConcurrentHashMap<>();
