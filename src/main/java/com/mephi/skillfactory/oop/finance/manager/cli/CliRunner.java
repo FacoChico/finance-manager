@@ -228,6 +228,10 @@ public class CliRunner implements CommandLineRunner {
                             System.out.println("Использование: import <path/to/wallet-file.json>");
                             break;
                         }
+                        if (isUserNotLoggedIn(currentUser)) {
+                            System.out.println("Для импорта данных необходимо авторизоваться");
+                            break;
+                        }
 
                         final var importPath = join(parts, 1);
                         try {
@@ -304,14 +308,18 @@ public class CliRunner implements CommandLineRunner {
         System.out.printf("В общем на счету: %.2f%n", incomes - expenses);
 
         System.out.printf("%nДоходы за все время: %.2f%n", incomes);
-        System.out.println("Доходы по категориям:");
-        walletService.sumByOperationTypeAndCategory(user.getWallet().getOperations(), INCOME, null)
-            .forEach((k, v) -> System.out.printf("  %s: %.2f%n", k, v));
+        final var incomeByCategoryMap = walletService.sumByOperationTypeAndCategory(user.getWallet().getOperations(), INCOME, null);
+        if (!incomeByCategoryMap.isEmpty()) {
+            System.out.println("Доходы по категориям:");
+            incomeByCategoryMap.forEach((k, v) -> System.out.printf("  %s: %.2f%n", k, v));
+        }
 
         System.out.printf("%nРасходы за все время: %.2f%n", expenses);
-        System.out.println("Расходы по категориям:");
-        walletService.sumByOperationTypeAndCategory(user.getWallet().getOperations(), EXPENSE, null)
-            .forEach((k, v) -> System.out.printf("  %s: %.2f%n", k, v));
+        final var expenseByCategoryMap = walletService.sumByOperationTypeAndCategory(user.getWallet().getOperations(), EXPENSE, null);
+        if (!expenseByCategoryMap.isEmpty()) {
+            System.out.println("Расходы по категориям:");
+            expenseByCategoryMap.forEach((k, v) -> System.out.printf("  %s: %.2f%n", k, v));
+        }
 
         final var budgets = user.getWallet().getBudgets();
         if (!budgets.isEmpty()) {

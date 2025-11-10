@@ -71,6 +71,9 @@ public class WalletService {
         final var income = new Operation(INCOME, amount, category, description, fromLogin, toLogin);
         toUser.getWallet().addOperation(income);
 
+        saveUserWallet(fromUser);
+        saveUserWallet(toUser);
+
         alertService.checkAlerts(fromUser, expense, sumByOperationTypeAndCategory(fromUser.getWallet().getOperations(), EXPENSE, null)
             .getOrDefault(category, 0.0), totalIncome(fromUser), totalExpense(fromUser));
         alertService.checkAlerts(toUser, income, sumByOperationTypeAndCategory(toUser.getWallet().getOperations(), EXPENSE, null)
