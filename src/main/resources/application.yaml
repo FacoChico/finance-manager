@@ -1,3 +1,5 @@
 spring:
   application:
     name: Finance Manager
+
+limit-threshold: 0.2

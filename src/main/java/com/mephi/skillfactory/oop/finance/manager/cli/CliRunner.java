@@ -8,6 +8,7 @@ import com.mephi.skillfactory.oop.finance.manager.service.exception.UserNotFound
 import com.mephi.skillfactory.oop.finance.manager.service.wallet.WalletService;
 import com.mephi.skillfactory.oop.finance.manager.service.wallet.exception.AmountException;
 import com.mephi.skillfactory.oop.finance.manager.service.wallet.exception.BudgetException;
+import com.mephi.skillfactory.oop.finance.manager.service.wallet.exception.CategoryNotFoundException;
 import com.mephi.skillfactory.oop.finance.manager.service.wallet.exception.WalletImportSourceException;
 
 import org.springframework.boot.CommandLineRunner;
@@ -148,6 +149,26 @@ public class CliRunner implements CommandLineRunner {
                             System.out.println("Использование: add-expense <amount> <category> [description]");
                         }
                         break;
+                    case "edit-category":
+                        if (isUserNotLoggedIn(currentUser)) {
+                            System.out.println("Для изменения категории необходимо авторизоваться");
+                            break;
+                        }
+                        if (parts.length != 3) {
+                            System.out.println("Использование: edit-category <old-category-name> <new-category-name>");
+                            break;
+                        }
+
+                        final var oldCategoryName = parts[1];
+                        final var newCategoryName = parts[2];
+
+                        try {
+                            walletService.renameCategory(currentUser, oldCategoryName, newCategoryName);
+                            System.out.println("Категория изменена");
+                        } catch (CategoryNotFoundException e) {
+                            System.out.printf("Ошибка во время изменения категории: %s%n", e.getMessage());
+                        }
+                        break;
                     case "set-budget":
                         if (isUserNotLoggedIn(currentUser)) {
                             System.out.println("Для установки бюджета необходимо авторизоваться");
@@ -167,6 +188,63 @@ public class CliRunner implements CommandLineRunner {
                         } catch (BudgetException e) {
                             System.out.printf("Бюджет не установлен: %s%n", e.getMessage());
                         }
+                        break;
+                    case "edit-budget":
+                        if (isUserNotLoggedIn(currentUser)) {
+                            System.out.println("Для изменения бюджета необходимо авторизоваться");
+                            break;
+                        }
+                        if (parts.length != 2) {
+                            System.out.println("Использование: edit-budget <category>");
+                            break;
+                        }
+
+                        final var budgetToChangeCategory = parts[1];
+
+                        System.out.print(
+                            """
+                                Доступные опции:
+                                  delete          - удаление бюджета
+                                  change <amount> - изменение суммы бюджета
+                                """
+                        );
+
+                        final var editBudgetOptionLine = scanner.nextLine();
+
+                        if (editBudgetOptionLine == null) {
+                            break;
+                        }
+                        final var editBudgetOptionParts = editBudgetOptionLine.trim().split("\\s+");
+                        if (editBudgetOptionParts.length == 0 || editBudgetOptionParts[0].isBlank()) {
+                            break;
+                        }
+
+                        try {
+                            switch (editBudgetOptionParts[0]) {
+                                case "delete":
+                                    if (editBudgetOptionParts.length == 1) {
+                                        walletService.deleteBudget(currentUser, budgetToChangeCategory);
+                                        System.out.printf("Бюджет для категории %s был удален%n", budgetToChangeCategory);
+                                        break;
+                                    }
+                                    System.out.println("Бюджет не был изменен: некорректное количество аргументов.\nИспользование: change <amount>");
+                                    break;
+                                case "change":
+                                    if (editBudgetOptionParts.length == 2) {
+                                        final var newBudgetAmount = Double.parseDouble(editBudgetOptionParts[1]);
+                                        walletService.changeBudgetLimit(currentUser, budgetToChangeCategory, newBudgetAmount);
+                                        System.out.printf("Бюджет для категории %s был изменен на %s%n", budgetToChangeCategory, newBudgetAmount);
+                                        break;
+                                    }
+                                    System.out.println("Бюджет не был изменен: некорректное количество аргументов.\nИспользование: change <amount>");
+                                    break;
+                                default:
+                                    System.out.println("Бюджет не был изменен: неизвестная опция");
+                            }
+                        } catch (BudgetException e) {
+                            System.out.printf("Бюджет не был изменен: %s%n", e.getMessage());
+                        }
+
                         break;
                     case "transfer":
                         if (isUserNotLoggedIn(currentUser)) {
@@ -224,18 +302,42 @@ public class CliRunner implements CommandLineRunner {
                         System.out.println("Кошелек сохранен по пути 'data/" + currentUser.getLogin() + ".json'");
                         break;
                     case "import":
-                        if (parts.length < 2) {
-                            System.out.println("Использование: import <path/to/wallet-file.json>");
-                            break;
-                        }
                         if (isUserNotLoggedIn(currentUser)) {
                             System.out.println("Для импорта данных необходимо авторизоваться");
                             break;
                         }
+                        if (parts.length < 2) {
+                            System.out.println("Использование: import <path/to/wallet-file.json>");
+                            break;
+                        }
 
                         final var importPath = join(parts, 1);
+                        System.out.printf(
+                            """
+                                Вы уверены, что хотите импортировать кошелек из файла %s?
+                                Кошелек будет присвоен текущему пользователю %s
+                                Да - 'Y', нет - любой другой символ
+                                """, importPath, currentUser.getLogin()
+                        );
+
+                        final var isSureLine = scanner.nextLine();
+
+                        if (isSureLine == null) {
+                            break;
+                        }
+                        final var isSureParts = isSureLine.trim().split("\\s+");
+                        if (isSureParts.length == 0 || isSureParts[0].isBlank()) {
+                            break;
+                        }
+
+                        if (!"Y".equalsIgnoreCase(isSureParts[0]) && !"У".equalsIgnoreCase(isSureParts[0])) {
+                            System.out.println("Импорт отменен");
+                            break;
+                        }
+
                         try {
                             walletService.importWalletForUser(importPath, currentUser);
+                            System.out.printf("Импорт кошелька осуществлен. Кошелек присвоен пользователю %s%n", currentUser.getLogin());
                         } catch (WalletImportSourceException | FileContentTypeMismatchException e) {
                             System.out.printf("Ошибка во время импорта кошелька: %s%n", e.getMessage());
                         }
@@ -267,18 +369,20 @@ public class CliRunner implements CommandLineRunner {
         System.out
             .println("""
                 Доступные команды:
-                  register <login> <password>                          - регистрация
-                  login <login> <password>                             - авторизация
-                  logout                                               - выход из аккаунта
-                  add-income <amount> <category> [description]         - добавление дохода
-                  add-expense <amount> <category> [description]        - добавление расхода
-                  set-budget <category> <amount>                       - установить бюджет для категории
-                  transfer <toLogin> <amount> [category] [description] - перевод
-                  summary                                              - сводная статистика по кошельку
-                  summary-by-categories <category1 ... categoryN>      - сводная статистика по категории/категориям
-                  export                                               - сохранить кошелек в файл 'data/<login>.json'
-                  import <path/to/wallet-file.json>                    - импорт кошелька из json-файла в 'data/<login>.json' (кошелек будет присвоен текущему пользователю)
-                  exit                                                 - выход
+                  register <login> <password>                           - регистрация
+                  login <login> <password>                              - авторизация
+                  logout                                                - выход из аккаунта
+                  add-income <amount> <category> [description]          - добавление дохода
+                  add-expense <amount> <category> [description]         - добавление расхода
+                  edit-category <old-category-name> <new-category-name> - изменение названия категории
+                  set-budget <category> <amount>                        - установление бюджета для категории
+                  edit-budget <category>                                - изменение бюджета для категории: удаление бюджета или изменение суммы
+                  transfer <toLogin> <amount> [category] [description]  - перевод
+                  summary                                               - сводная статистика по кошельку
+                  summary-by-categories <category1 ... categoryN>       - сводная статистика по категории/категориям
+                  export                                                - сохранение кошелька в файл 'data/<login>.json'
+                  import <path/to/wallet-file.json>                     - импорт кошелька из json-файла в 'data/<login>.json' (кошелек будет присвоен текущему пользователю)
+                  exit                                                  - выход
                 """);
     }
 
