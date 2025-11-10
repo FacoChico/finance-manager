@@ -163,7 +163,7 @@ class FileBasedWalletRepositoryUnitTest {
 
     @Test
     @SneakyThrows
-    void importWallet_overwriteExisting_replacesFileAndUpdatesUser(@TempDir Path tempDir) {
+    void shouldReplaceExistingFileWhileImporting(@TempDir Path tempDir) {
         // given
         final var repository = new FileBasedWalletRepository(tempDir.toString());
         final var login = "login";
