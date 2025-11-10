@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 
 import java.io.File;
@@ -16,13 +17,14 @@ public class FileBasedCredentialsRepository implements CredentialsRepository {
     private final ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
     private final File credentialsFile;
 
-    public FileBasedCredentialsRepository() {
-        final var dataDir = new File("data");
+    public FileBasedCredentialsRepository(@Value("${app.data-dir}") String dataDirName,
+                                          @Value("${app.credentials-file}") String credentialsFileName) {
+        final var dataDir = new File(dataDirName);
         if (!dataDir.exists()) {
             final var ignored = dataDir.mkdirs();
         }
 
-        credentialsFile = new File(dataDir, "credentials.json");
+        credentialsFile = new File(dataDir, credentialsFileName);
     }
 
     @Override

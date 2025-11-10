@@ -37,6 +37,9 @@ dependencies {
 
     implementation "commons-codec:commons-codec:${commonsCodecVersion}"
 
+    testCompileOnly "org.projectlombok:lombok:${lombokVersion}"
+    testAnnotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
@@ -60,4 +63,8 @@ spotless {
 
 tasks.register('ciCheck') {
     dependsOn 'spotlessCheck', 'check'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs << "-Xlint:all" << "-Werror" << "-Xlint:-serial" << '-Xlint:-processing' << '-Xlint:-removal' << '-Xlint:-deprecation'
 }

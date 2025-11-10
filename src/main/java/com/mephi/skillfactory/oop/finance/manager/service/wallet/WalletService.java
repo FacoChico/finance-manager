@@ -135,7 +135,6 @@ public class WalletService {
             .orElseThrow(() -> new BudgetException("Бюджет для категории %s не найден".formatted(category)));
     }
 
-    // TODO: заменить юзера на операции (?)
     public double totalIncome(User user) {
         return user.getWallet().getOperations().stream()
             .filter(operation -> INCOME.equals(operation.getType()))
